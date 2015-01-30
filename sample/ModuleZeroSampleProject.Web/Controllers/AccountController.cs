@@ -1,6 +1,7 @@
 ﻿using System;
-using System.Configuration;
+using System.Globalization;
 using System.Security.Claims;
+using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
 using Abp.Domain.Repositories;
@@ -19,7 +20,7 @@ namespace ModuleZeroSampleProject.Web.Controllers
 {
     public class AccountController : ModuleZeroSampleProjectControllerBase
     {
-        private readonly ModuleZeroSampleProjectUserManager _userManager;
+        private readonly UserManager _userManager;
 
         private readonly IRepository<User, long> _userRepository;
         private readonly IRepository<Tenant> _tenantRepository;
@@ -33,7 +34,7 @@ namespace ModuleZeroSampleProject.Web.Controllers
             }
         }
 
-        public AccountController(ModuleZeroSampleProjectUserManager userManager, IRepository<User, long> userRepository, IRepository<Tenant> tenantRepository, MultiTenancyConfig multiTenancy)
+        public AccountController(UserManager userManager, IRepository<User, long> userRepository, IRepository<Tenant> tenantRepository, MultiTenancyConfig multiTenancy)
         {
             _userManager = userManager;
             _userRepository = userRepository;
@@ -55,7 +56,7 @@ namespace ModuleZeroSampleProject.Web.Controllers
 
         [UnitOfWork]
         [HttpPost]
-        public virtual JsonResult Login(LoginViewModel loginModel, string returnUrl = "")
+        public virtual async Task<JsonResult> Login(LoginViewModel loginModel, string returnUrl = "")
         {
             if (!ModelState.IsValid)
             {
@@ -66,7 +67,7 @@ namespace ModuleZeroSampleProject.Web.Controllers
 
             if (!_multiTenancy.IsEnabled)
             {
-                user = _userManager.Find(loginModel.UsernameOrEmailAddress, loginModel.Password);
+                user = await _userManager.FindAsync(loginModel.UsernameOrEmailAddress, loginModel.Password);
                 if (user == null)
                 {
                     throw new UserFriendlyException("Invalid user name or password!");
@@ -74,13 +75,13 @@ namespace ModuleZeroSampleProject.Web.Controllers
             }
             else if (!string.IsNullOrWhiteSpace(loginModel.TenancyName))
             {
-                var tenant = _tenantRepository.FirstOrDefault(t => t.TenancyName == loginModel.TenancyName);
+                var tenant = await _tenantRepository.FirstOrDefaultAsync(t => t.TenancyName == loginModel.TenancyName);
                 if (tenant == null)
                 {
                     throw new UserFriendlyException("No tenant with name: " + loginModel.TenancyName);
                 }
 
-                user = _userRepository.FirstOrDefault(
+                user = await _userRepository.FirstOrDefaultAsync(
                     u =>
                         (u.UserName == loginModel.UsernameOrEmailAddress ||
                          u.EmailAddress == loginModel.UsernameOrEmailAddress)
@@ -104,8 +105,12 @@ namespace ModuleZeroSampleProject.Web.Controllers
             }
 
             AuthenticationManager.SignOut(DefaultAuthenticationTypes.ExternalCookie);
-            var identity = _userManager.CreateIdentityAsync(user, DefaultAuthenticationTypes.ApplicationCookie).Result;
-            identity.AddClaim(new Claim(AbpClaimTypes.TenantId, user.TenantId.HasValue ? user.TenantId.Value.ToString() : null));
+
+            var identity = await _userManager.CreateIdentityAsync(user, DefaultAuthenticationTypes.ApplicationCookie);
+            if (user.TenantId.HasValue)
+            {
+                identity.AddClaim(new Claim(AbpClaimTypes.TenantId, user.TenantId.Value.ToString(CultureInfo.InvariantCulture)));
+            }
 
             AuthenticationManager.SignIn(new AuthenticationProperties { IsPersistent = loginModel.RememberMe }, identity);
 
