@@ -1,5 +1,4 @@
 using System;
-using System.Configuration;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading;
@@ -22,7 +21,7 @@ namespace Abp.Runtime.Session
             get
             {
                 var userId = Thread.CurrentPrincipal.Identity.GetUserId();
-                if (userId == null)
+                if (string.IsNullOrEmpty(userId))
                 {
                     return null;
                 }
@@ -47,15 +46,18 @@ namespace Abp.Runtime.Session
                 }
 
                 var claim = claimsPrincipal.Claims.FirstOrDefault(c => c.Type == AbpClaimTypes.TenantId);
-                if (claim == null)
+                if (claim == null || string.IsNullOrEmpty(claim.Value))
                 {
                     return null;
                 }
-
+                
                 return Convert.ToInt32(claim.Value);
             }
         }
 
+        /// <summary>
+        /// Constructor.
+        /// </summary>
         public AbpSession(MultiTenancyConfig multiTenancy)
         {
             _multiTenancy = multiTenancy;

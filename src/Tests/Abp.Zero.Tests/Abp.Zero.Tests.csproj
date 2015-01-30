@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\..\packages\xunit.runner.visualstudio.2.0.0-rc1-build1030\build\net20\xunit.runner.visualstudio.props" Condition="Exists('..\..\packages\xunit.runner.visualstudio.2.0.0-rc1-build1030\build\net20\xunit.runner.visualstudio.props')" />
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -13,6 +14,7 @@
     <FileAlignment>512</FileAlignment>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
+    <NuGetPackageImportStamp>93a37185</NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -32,13 +34,13 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Abp, Version=0.5.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Abp, Version=0.5.0.4, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\packages\Abp.0.5.0.0\lib\net451\Abp.dll</HintPath>
+      <HintPath>..\..\packages\Abp.0.5.0.4\lib\net451\Abp.dll</HintPath>
     </Reference>
-    <Reference Include="Abp.EntityFramework, Version=0.5.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Abp.EntityFramework, Version=0.5.0.4, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\packages\Abp.EntityFramework.0.5.0.0\lib\net451\Abp.EntityFramework.dll</HintPath>
+      <HintPath>..\..\packages\Abp.EntityFramework.0.5.0.4\lib\net451\Abp.EntityFramework.dll</HintPath>
     </Reference>
     <Reference Include="Castle.Core, Version=3.3.0.0, Culture=neutral, PublicKeyToken=407dd0808d44fbdc, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -93,11 +95,15 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Authorization\FakePermissionManagerBuilder.cs" />
+    <Compile Include="Authorization\Roles\RoleManager_Tests.cs" />
     <Compile Include="Dependency\Dependency_Tests.cs" />
     <Compile Include="_TestBasis\TestBase.cs" />
     <Compile Include="_TestBasis\TestDbContext.cs" />
     <Compile Include="_TestBasis\TestEfRepositoryBase.cs" />
     <Compile Include="_TestBasis\TestRole.cs" />
+    <Compile Include="_TestBasis\TestRoleManager.cs" />
+    <Compile Include="_TestBasis\TestRoleStore.cs" />
     <Compile Include="_TestBasis\TestSession.cs" />
     <Compile Include="_TestBasis\TestTenant.cs" />
     <Compile Include="_TestBasis\TestUser.cs" />
@@ -130,6 +136,7 @@
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
+    <Error Condition="!Exists('..\..\packages\xunit.runner.visualstudio.2.0.0-rc1-build1030\build\net20\xunit.runner.visualstudio.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\packages\xunit.runner.visualstudio.2.0.0-rc1-build1030\build\net20\xunit.runner.visualstudio.props'))" />
   </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -5,14 +5,14 @@ using Abp.Zero.Configuration;
 namespace Abp.Zero
 {
     /// <summary>
-    /// ABP zero module.
+    /// ABP zero core module.
     /// </summary>
     public class AbpZeroCoreModule : AbpModule
     {
         /// <summary>
         /// Current version of the zero module.
         /// </summary>
-        public const string CurrentVersion = "0.5.0.1";
+        public const string CurrentVersion = "0.5.0.2";
 
         public override void PreInitialize()
         {
@@ -22,7 +22,6 @@ namespace Abp.Zero
 
         public override void Initialize()
         {
-            base.Initialize();
             IocManager.RegisterAssemblyByConvention(Assembly.GetExecutingAssembly());
         }
     }
