@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Abp.Authorization.Users;
 using Abp.Dependency;
@@ -23,42 +22,21 @@ namespace Abp.Authorization.Roles
             _permissionManager = permissionManager;
         }
 
-        public async Task<IReadOnlyList<Permission>> GetGrantedPermissionsAsync(int roleId)
-        {
-            var role = await FindByIdAsync(roleId);
-            if (role == null)
-            {
-                throw new AbpAuthorizationException("There is no role with id = " + roleId);
-            }
-
-            var permissionList = new List<Permission>();
-
-            foreach (var permission in _permissionManager.GetAllPermissions())
-            {
-                if (await HasPermissionInternalAsync(role, permission))
-                {
-                    permissionList.Add(permission);
-                }
-            }
-
-            return permissionList;
-        }
-
         /// <summary>
         /// Checks if a role has a permission.
         /// </summary>
         /// <param name="roleName">The role's name to check it's permission</param>
         /// <param name="permissionName">Name of the permission</param>
         /// <returns>True, if the role has the permission</returns>
-        public async Task<bool> HasPermissionAsync(string roleName, string permissionName)
+        public bool HasPermission(string roleName, string permissionName) //TODO: Async
         {
-            var role = await FindByNameAsync(roleName);
+            var role = this.FindByName(roleName);
             if (role == null)
             {
                 throw new AbpAuthorizationException("There is no role named " + roleName);
             }
 
-            return await HasPermissionInternalAsync(role, permissionName);
+            return HasPermissionInternal(role, permissionName);
         }
 
         /// <summary>
@@ -67,50 +45,46 @@ namespace Abp.Authorization.Roles
         /// <param name="roleId">The role's id to check it's permission</param>
         /// <param name="permissionName">Name of the permission</param>
         /// <returns>True, if the role has the permission</returns>
-        public async Task<bool> HasPermissionAsync(int roleId, string permissionName)
+        public bool HasPermission(int roleId, string permissionName) //TODO: Async
         {
-            var role = await FindByIdAsync(roleId);
+            var role = this.FindById(roleId);
+
             if (role == null)
             {
                 throw new AbpAuthorizationException("There is no role by id = " + roleId);
             }
 
-            return await HasPermissionInternalAsync(role, permissionName);
+            return HasPermissionInternal(role, permissionName);
         }
 
         public override Task<IdentityResult> DeleteAsync(TRole role)
         {
             if (role.IsStatic)
             {
-                throw new AbpException("Can not delete a static role: " + role);
+                throw new AbpException("Can not delete a static role: ");
             }
 
             return base.DeleteAsync(role);
         }
 
-        private async Task<bool> HasPermissionInternalAsync(TRole role, string permissionName) //TODO: Async
-        {
-            var permission = _permissionManager.GetPermissionOrNull(permissionName);
-            if (permission == null)
-            {
-                throw new AbpException("There is no permission with name: " + permissionName);
-            }
-
-            return await HasPermissionInternalAsync(role, permission);
-        }
-
-        private async Task<bool> HasPermissionInternalAsync(TRole role, Permission permission) //TODO: Async
+        private bool HasPermissionInternal(TRole role, string permissionName) //TODO: Async
         {
             if (!(Store is IRolePermissionStore<TRole, TTenant, TUser>))
             {
                 throw new AbpException("Store is not IRolePermissionStore");
             }
 
+            var permission = _permissionManager.GetPermissionOrNull(permissionName);
+            if (permission == null)
+            {
+                throw new AbpException("There is no permission with name: " + permissionName);
+            }
+
             var permissionStore = Store as IRolePermissionStore<TRole, TTenant, TUser>;
 
             return permission.IsGrantedByDefault
-                ? !(await permissionStore.HasPermissionAsync(role, new PermissionGrantInfo(permission.Name, false)))
-                : (await permissionStore.HasPermissionAsync(role, new PermissionGrantInfo(permission.Name, true)));
+                ? !permissionStore.HasPermissionAsync(role, new PermissionGrantInfo(permissionName, false)).Result
+                : permissionStore.HasPermissionAsync(role, new PermissionGrantInfo(permissionName, true)).Result;
         }
     }
 }
